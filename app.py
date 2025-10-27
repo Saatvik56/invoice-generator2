@@ -5,11 +5,6 @@ import io
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, flash, make_response
 from playwright.sync_api import sync_playwright
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import Flow
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload
 from dotenv import load_dotenv
 from config import Config
 
@@ -17,10 +12,6 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config.from_object(Config)
-
-# Google Drive OAuth settings
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
-CLIENT_SECRETS_FILE = "client_secret.json"
 
 # In-memory cache for invoice data (in production, use Redis or database)
 invoice_cache = {}
@@ -264,124 +255,6 @@ def generate_pdf(invoice_no):
     except Exception as e:
         flash(f'Error generating PDF: {str(e)}', 'error')
         return redirect(url_for('preview_invoice', invoice_no=invoice_no))
-
-@app.route('/authorize')
-def authorize():
-    flow = Flow.from_client_secrets_file(
-        CLIENT_SECRETS_FILE,
-        scopes=SCOPES,
-        redirect_uri=url_for('oauth2callback', _external=True)
-    )
-    
-    authorization_url, state = flow.authorization_url(
-        access_type='offline',
-        include_granted_scopes='true'
-    )
-    
-    session['state'] = state
-    
-    return redirect(authorization_url)
-
-@app.route('/oauth2callback')
-def oauth2callback():
-    flow = Flow.from_client_secrets_file(
-        CLIENT_SECRETS_FILE,
-        scopes=SCOPES,
-        redirect_uri=url_for('oauth2callback', _external=True),
-        state=session['state']
-    )
-    
-    flow.fetch_token(authorization_response=request.url)
-    
-    credentials = flow.credentials
-    session['credentials'] = {
-        'token': credentials.token,
-        'refresh_token': credentials.refresh_token,
-        'token_uri': credentials.token_uri,
-        'client_id': credentials.client_id,
-        'client_secret': credentials.client_secret,
-        'scopes': credentials.scopes
-    }
-    
-    return redirect(url_for('index'))
-
-@app.route('/upload-to-drive/<invoice_no>')
-def upload_to_drive(invoice_no):
-    if invoice_no not in invoice_cache:
-        flash('Invoice not found', 'error')
-        return redirect(url_for('preview_invoice', invoice_no=invoice_no))
-    
-    if 'credentials' not in session:
-        return redirect(url_for('authorize'))
-    
-    try:
-        # Create credentials object
-        credentials = Credentials(
-            token=session['credentials']['token'],
-            refresh_token=session['credentials']['refresh_token'],
-            token_uri=session['credentials']['token_uri'],
-            client_id=session['credentials']['client_id'],
-            client_secret=session['credentials']['client_secret'],
-            scopes=session['credentials']['scopes']
-        )
-        
-        # Refresh credentials if needed
-        if not credentials.valid:
-            if credentials.expired and credentials.refresh_token:
-                credentials.refresh(Request())
-                # Update session with new credentials
-                session['credentials'] = {
-                    'token': credentials.token,
-                    'refresh_token': credentials.refresh_token,
-                    'token_uri': credentials.token_uri,
-                    'client_id': credentials.client_id,
-                    'client_secret': credentials.client_secret,
-                    'scopes': credentials.scopes
-                }
-        
-        # Get invoice data
-        invoice_data = invoice_cache[invoice_no]
-        logo_base64 = encode_image_to_base64('static/logo.png')
-        
-        # Generate PDF in memory
-        invoice_html = render_template('invoice_pdf.html', invoice=invoice_data, logo_base64=logo_base64)
-        
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
-            page.set_content(invoice_html)
-            
-            pdf_content = page.pdf(
-                format='A4',
-                print_background=True
-            )
-            
-            browser.close()
-        
-        # Upload to Google Drive
-        service = build('drive', 'v3', credentials=credentials)
-        
-        file_metadata = {
-            'name': f'{invoice_no}_{invoice_data["invoice_date"]}.pdf'
-        }
-        
-        media = MediaIoBaseUpload(
-            io.BytesIO(pdf_content),
-            mimetype='application/pdf'
-        )
-        
-        file = service.files().create(
-            body=file_metadata,
-            media_body=media,
-            fields='id,webViewLink'
-        ).execute()
-        
-        flash(f'Invoice uploaded successfully! <a href="{file["webViewLink"]}" target="_blank">View in Google Drive</a>', 'success')
-        
-    except Exception as e:
-        flash(f'Error uploading to Google Drive: {str(e)}', 'error')
-    
-    return redirect(url_for('preview_invoice', invoice_no=invoice_no))
 
 if __name__ == '__main__':
     app.run(debug=True)
