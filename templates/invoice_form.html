@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}Create Invoice - Invoice Generator{% endblock %}
+
+{% block content %}
+<div class="invoice-container">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-file-invoice me-2"></i>
+                {% if invoice %}Edit Invoice{% else %}Create New Invoice{% endif %}
+            </h2>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('create_invoice') }}" id="invoiceForm">
+        <!-- Basic Invoice Information -->
+        <div class="form-section">
+            <h5><i class="fas fa-info-circle me-2"></i>Invoice Information</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="invoice_number" class="form-label">Invoice Number *</label>
+                    <input type="text" class="form-control" id="invoice_number" name="invoice_number" 
+                           value="{{ invoice.invoice_number if invoice }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="invoice_date" class="form-label">Invoice Date *</label>
+                    <input type="date" class="form-control" id="invoice_date" name="invoice_date" 
+                           value="{{ invoice.invoice_date if invoice }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="date_of_supply" class="form-label">Date of Supply</label>
+                    <input type="date" class="form-control" id="date_of_supply" name="date_of_supply" 
+                           value="{{ invoice.date_of_supply if invoice }}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Transport Information -->
+        <div class="form-section">
+            <h5><i class="fas fa-truck me-2"></i>Transport Information</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="vehicle_no" class="form-label">Vehicle No.</label>
+                    <input type="text" class="form-control" id="vehicle_no" name="vehicle_no" 
+                           value="{{ invoice.vehicle_no if invoice }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="gr_rr_no" class="form-label">GR/RR No.</label>
+                    <input type="text" class="form-control" id="gr_rr_no" name="gr_rr_no" 
+                           value="{{ invoice.gr_rr_no if invoice }}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Billed To -->
+        <div class="form-section">
+            <h5><i class="fas fa-user me-2"></i>Billed To</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="billed_to_name" class="form-label">Client Name *</label>
+                    <input type="text" class="form-control" id="billed_to_name" name="billed_to_name" 
+                           value="{{ invoice.billed_to.name if invoice }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label for="billed_to_state" class="form-label">State</label>
+                    <input type="text" class="form-control" id="billed_to_state" name="billed_to_state" 
+                           value="{{ invoice.billed_to.state if invoice }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="billed_to_state_code" class="form-label">State Code</label>
+                    <input type="text" class="form-control" id="billed_to_state_code" name="billed_to_state_code" 
+                           value="{{ invoice.billed_to.state_code if invoice }}">
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-8">
+                    <label for="billed_to_address" class="form-label">Place of Supply</label>
+                    <textarea class="form-control" id="billed_to_address" name="billed_to_address" rows="2">{{ invoice.billed_to.place_of_supply if invoice }}</textarea>
+                </div>
+                <div class="col-md-4">
+                    <label for="billed_to_gstin" class="form-label">GSTIN</label>
+                    <input type="text" class="form-control" id="billed_to_gstin" name="billed_to_gstin" 
+                           value="{{ invoice.billed_to.gstin if invoice }}">
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Items Section -->
+        <div class="form-section">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5><i class="fas fa-list me-2"></i>Items</h5>
+                <button type="button" class="btn btn-add-item" onclick="addItemRow()">
+                    <i class="fas fa-plus me-2"></i>Add Item
+                </button>
+            </div>
+            <div id="items-container">
+                {% if invoice and invoice.invoice_items %}
+                    {% for item in invoice.invoice_items %}
+                    <div class="item-row">
+                        <div class="row align-items-end">
+                            <div class="col-md-5">
+                                <label class="form-label">Description *</label>
+                                <input type="text" class="form-control" name="item_description" 
+                                       value="{{ item.description }}" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">HSN</label>
+                                <input type="text" class="form-control" name="item_hsn" 
+                                       value="{{ item.hsn_code }}">
+                            </div>
+                            <div class="col-md-1">
+                                <label class="form-label">Qty</label>
+                                <input type="number" class="form-control" name="item_quantity" 
+                                       value="{{ item.quantity }}" step="0.01" min="0">
+                            </div>
+                            <div class="col-md-1">
+                                <label class="form-label">UOM</label>
+                                <input type="text" class="form-control" name="item_uom" 
+                                       value="{{ item.uom }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Rate</label>
+                                <input type="number" class="form-control" name="item_rate" 
+                                       value="{{ item.rate }}" step="0.01" min="0">
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-remove-item" onclick="removeItemRow(this)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="item-row">
+                    <div class="row align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label">Description *</label>
+                            <input type="text" class="form-control" name="item_description" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">HSN</label>
+                            <input type="text" class="form-control" name="item_hsn">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">Qty</label>
+                            <input type="number" class="form-control" name="item_quantity" step="0.01" min="0">
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">UOM</label>
+                            <input type="text" class="form-control" name="item_uom">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Rate</label>
+                            <input type="number" class="form-control" name="item_rate" step="0.01" min="0">
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-remove-item" onclick="removeItemRow(this)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- GST Information -->
+        <div class="form-section">
+            <h5><i class="fas fa-percentage me-2"></i>GST Information</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="cgst_rate" class="form-label">CGST Rate (%)</label>
+                    <input type="number" class="form-control" id="cgst_rate" name="cgst_rate" 
+                           value="{{ invoice.cgst_rate if invoice }}" step="0.01" min="0" max="100">
+                </div>
+                <div class="col-md-4">
+                    <label for="sgst_rate" class="form-label">SGST Rate (%)</label>
+                    <input type="number" class="form-control" id="sgst_rate" name="sgst_rate" 
+                           value="{{ invoice.sgst_rate if invoice }}" step="0.01" min="0" max="100">
+                </div>
+                <div class="col-md-4">
+                    <label for="igst_rate" class="form-label">IGST Rate (%)</label>
+                    <input type="number" class="form-control" id="igst_rate" name="igst_rate" 
+                           value="{{ invoice.igst_rate if invoice }}" step="0.01" min="0" max="100">
+                </div>
+            </div>
+        </div>
+
+        <!-- Discount and Electronic Reference -->
+        <div class="form-section">
+            <h5><i class="fas fa-percentage me-2"></i>Additional Information</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="discount_amount" class="form-label">Discount Amount</label>
+                    <input type="number" class="form-control" id="discount_amount" name="discount_amount" 
+                           value="{{ invoice.discount_amount if invoice }}" step="0.01" min="0">
+                </div>
+                <div class="col-md-6">
+                    <label for="electronic_ref_no" class="form-label">Electronic Reference No.</label>
+                    <input type="text" class="form-control" id="electronic_ref_no" name="electronic_ref_no" 
+                           value="{{ invoice.electronic_ref_no if invoice }}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-eye me-2"></i>Preview Invoice
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let itemRowCount = {% if invoice %}{{ invoice.invoice_items|length }}{% else %}1{% endif %};
+
+function addItemRow() {
+    const container = document.getElementById('items-container');
+    const newRow = document.createElement('div');
+    newRow.className = 'item-row';
+    newRow.innerHTML = `
+        <div class="row align-items-end">
+            <div class="col-md-5">
+                <label class="form-label">Description *</label>
+                <input type="text" class="form-control" name="item_description" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">HSN</label>
+                <input type="text" class="form-control" name="item_hsn">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">Qty</label>
+                <input type="number" class="form-control" name="item_quantity" step="0.01" min="0">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">UOM</label>
+                <input type="text" class="form-control" name="item_uom">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Rate</label>
+                <input type="number" class="form-control" name="item_rate" step="0.01" min="0">
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-remove-item" onclick="removeItemRow(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    container.appendChild(newRow);
+    itemRowCount++;
+}
+
+function removeItemRow(button) {
+    const container = document.getElementById('items-container');
+    const itemRows = container.querySelectorAll('.item-row');
+    
+    if (itemRows.length > 1) {
+        button.closest('.item-row').remove();
+    } else {
+        alert('At least one item is required');
+    }
+}
+
+// Set default date to today
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    const invoiceDateField = document.getElementById('invoice_date');
+    if (invoiceDateField && !invoiceDateField.value) {
+        invoiceDateField.value = today;
+    }
+});
+</script>
+{% endblock %}

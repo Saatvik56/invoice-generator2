@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Invoice {{ invoice.invoice_number }}</title>
+  <style>
+    @page { size: A4 portrait; margin: 8mm; }
+    html, body { width: 210mm; height: 297mm; }
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 10pt;
+      color: #000;
+      line-height: 1.2;
+      margin: 0;
+      padding: 0;
+    }
+
+    .page {
+      border: 1px solid #000;
+      padding: 6mm;
+      box-sizing: border-box;
+      width: calc(100% - 2px);
+      min-height: calc(297mm - 16mm);
+    }
+
+    .header {
+      display: grid;
+      grid-template-columns: 120px 1fr 120px;
+      align-items: center;
+      column-gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .logo { height: 70px; object-fit: contain; margin-left: 10px; }
+    .gst { font-size: 9pt; text-align: center; margin-top: 2px; }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 19pt;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .addr { font-size: 9.5pt; text-align: center; }
+    .phone { font-size: 10pt; text-align: center; font-weight: 700; }
+
+    h2 {
+      text-align: right;
+      font-size: 14pt;
+      text-decoration: underline;
+      margin: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th, td {
+      border: 1px solid #000;
+      padding: 4px 6px;
+      vertical-align: top;
+      font-size: 9.5pt;
+    }
+
+    th { background: #f5f5f5; font-weight: 700; }
+    td, th { overflow-wrap: anywhere; }
+
+    .meta-table td {
+      font-size: 9.5pt;
+      padding: 5px 6px;
+    }
+
+    .items-wrapper {
+      height: 360px;
+      overflow: hidden;
+      margin-top: 6px;
+      margin-bottom: 4px;
+    }
+
+    .items th:nth-child(1), .items td:nth-child(1) { width: 7%; text-align: center; }
+    .items th:nth-child(2), .items td:nth-child(2) { width: 37%; }
+    .items th:nth-child(3), .items td:nth-child(3) { width: 8%; text-align: center; }
+    .items th:nth-child(4), .items td:nth-child(4) { width: 8%; text-align: center; }
+    .items th:nth-child(5), .items td:nth-child(5) { width: 8%; text-align: center; }
+    .items th:nth-child(6), .items td:nth-child(6) { width: 14%; text-align: right; }
+    .items th:nth-child(7), .items td:nth-child(7) { width: 14%; text-align: right; }
+
+    .items td { height: 42px; padding: 3px 5px; }
+
+    .items tr.empty-row td {
+      border-top: none;
+      border-bottom: none;
+    }
+
+    .items tbody tr:last-of-type td {
+      border-bottom: 1px solid #000 !important;
+    }
+
+    .items-end-line {
+      border-top: 1px solid #000;
+      width: 100%;
+    }
+
+    .totals-table {
+      margin-top: 4px;
+      margin-bottom: 4px;
+    }
+
+    .totals-table td {
+      padding: 3px 6px;
+      font-size: 9.5pt;
+    }
+
+    .amount-section {
+      margin-top: 4px;
+      font-size: 9.5pt;
+    }
+
+    .amount-section td {
+      border: 1px solid #000;
+      padding: 4px 6px;
+    }
+
+    .bank-table {
+      margin-top: 8px;
+      width: 100%;
+    }
+
+    .bank-table td {
+      padding: 5px 10px;
+      vertical-align: top;
+    }
+
+    .sign {
+      height: 30px;
+      margin: 6px 0;
+    }
+
+    .note-cell {
+      padding: 15px 12px;
+      font-size: 10.5pt;
+      line-height: 1.4;
+    }
+
+    @media print {
+      body { margin: 0; padding: 0; }
+      .page { page-break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- ===== HEADER ===== -->
+    <div class="header">
+      <div>
+        {% if logo_base64 %}
+          <img src="{{ logo_base64 }}" alt="Vijay Enterprises" class="logo">
+        {% endif %}
+        <div class="gst" style="white-space: nowrap;">GSTIN: 09ANKPS5822R1ZZ</div>
+      </div>
+
+      <div class="brand">
+        <h1>Vijay Enterprises</h1>
+        <div class="addr">19/4, S-W, Vimal Tower, Opp. HDFC Bank, Sanjay Place, Agra-282002</div>
+        <div class="phone">Mob.: 9837216469 | Email: vij.ent@rediffmail.com</div>
+      </div>
+
+      <div>
+        <h2>TAX INVOICE</h2>
+      </div>
+    </div>
+
+    <!-- ===== INVOICE DETAILS ===== -->
+    <table class="meta-table">
+      <tr>
+        <td><b>Invoice No:</b> {{ invoice.invoice_number }}</td>
+        <td><b>Invoice Date:</b> {{ invoice.invoice_date }}</td>
+        <td><b>Vehicle No:</b> {{ invoice.vehicle_no }}</td>
+        <td><b>G.R. / R.R. No:</b> {{ invoice.gr_rr_no }}</td>
+      </tr>
+      <tr>
+        <td><b>Date of Supply:</b> {{ invoice.date_of_supply }}</td>
+        <td><b>Place of Supply:</b> {{ invoice.billed_to.place_of_supply }}</td>
+        <td><b>State:</b> {{ invoice.billed_to.state }}</td>
+        <td><b>State Code:</b> {{ invoice.billed_to.state_code }}</td>
+      </tr>
+      <tr>
+        <td colspan="2"><b>Name:</b> {{ invoice.billed_to.name }}</td>
+        <td colspan="2"><b>GSTIN:</b> {{ invoice.billed_to.gstin }}</td>
+      </tr>
+    </table>
+
+    <!-- ===== ITEMS TABLE ===== -->
+    <div class="items-wrapper">
+      <table class="items">
+        <thead>
+          <tr>
+            <th>S. No.</th>
+            <th>DESCRIPTION OF GOODS</th>
+            <th>HSN Code</th>
+            <th>QTY</th>
+            <th>UOM</th>
+            <th>RATE (Rs.)</th>
+            <th>AMOUNT (Rs.)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in invoice.invoice_items %}
+          <tr>
+            <td class="center">{{ loop.index }}</td>
+            <td>{{ it.description }}</td>
+            <td>{{ it.hsn_code }}</td>
+            <td class="center">{{ it.quantity }}</td>
+            <td class="center">{{ it.uom }}</td>
+            <td class="right">{{ '%.2f'|format(it.rate) }}</td>
+            <td class="right">{{ '%.2f'|format(it.amount) }}</td>
+          </tr>
+          {% endfor %}
+
+          {% set empty_rows = 8 - invoice.invoice_items|length %}
+          {% for i in range(empty_rows if empty_rows > 0 else 0) %}
+          <tr class="empty-row">
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="items-end-line"></div>
+
+    <!-- ===== TOTALS ===== -->
+    <table class="totals-table">
+      <tr><td style="width:70%;"><b>Discount</b></td><td style="width:30%; text-align:right;">{{ '%.2f'|format(invoice.discount_amount) }}</td></tr>
+      <tr><td><b>Total Before GST</b></td><td style="text-align:right;">{{ '%.2f'|format(invoice.discounted_subtotal) }}</td></tr>
+      <tr><td><b>CGST @ {{ invoice.invoice_items[0].cgst_rate }}%</b></td><td style="text-align:right;">{{ '%.2f'|format(invoice.cgst_total) }}</td></tr>
+      <tr><td><b>SGST @ {{ invoice.invoice_items[0].sgst_rate }}%</b></td><td style="text-align:right;">{{ '%.2f'|format(invoice.sgst_total) }}</td></tr>
+      <tr><td><b>IGST @ {{ invoice.invoice_items[0].igst_rate }}%</b></td><td style="text-align:right;">{{ '%.2f'|format(invoice.igst_total) }}</td></tr>
+      <tr><td><b>Total Tax</b></td><td style="text-align:right;">{{ '%.2f'|format(invoice.cgst_total + invoice.sgst_total + invoice.igst_total) }}</td></tr>
+      <tr><td><b>Round Off (+/-)</b></td><td style="text-align:right;">{{ '%.2f'|format(invoice.round_off) }}</td></tr>
+      <tr><td><b>Grand Total</b></td><td style="text-align:right;"><b>{{ '%.2f'|format(invoice.final_total) }}</b></td></tr>
+    </table>
+
+    <!-- ===== AMOUNT IN WORDS + EWAY ===== -->
+    <div class="amount-section">
+      <table>
+        <tr>
+          <td style="width:70%;"><b>Invoice Total in Words:</b> {{ invoice.amount_in_words }}</td>
+          <td style="width:30%; text-align:right;"><b>E-Way Bill No.:</b> {{ invoice.electronic_ref_no if invoice.electronic_ref_no else 'N/A' }}</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- ===== BANK + DEALS + SIGN + NOTES ===== -->
+    <table class="bank-table">
+      <tr>
+        <td style="width:35%;">
+          <b>BANK DETAILS</b><br>
+          <div style="font-weight: normal;">Bank Name: Union Bank of India Branch: Agra Main Branch, Agra<br>
+A/c No.: 305501010032084 IFSC Code: UBIN0530557</div>
+        </td>
+        <td style="width:25%;">
+          <div style="border: 1px solid #000; padding: 8px; height: 100%;">
+            <div style="background: #000; color: white; padding: 4px; text-align: center; font-weight: bold; margin: -8px -8px 8px -8px;">Deals in :</div>
+            <div style="font-weight: normal; font-size: 9pt;">All Type of ISI Mark Fire Extinguishers, Fire Hydrant, Smoke Detector, Alarm System</div>
+          </div>
+        </td>
+        <td style="width:40%; text-align:center;">
+          <div>For <b>Vijay Enterprises</b></div>
+          <div style="height: 50px; margin: 10px 0;"></div>
+          <div>Authorised Signatory</div>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="3" class="note-cell" style="border-top:1px solid #000;">
+          <b>Note:</b><br>
+          1. Goods once sold will not be taken back.<br>
+          2. Subject to Agra Jurisdiction only.<br>
+          3. E.&O.E.
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>
