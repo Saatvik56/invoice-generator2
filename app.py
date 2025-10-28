@@ -11,6 +11,16 @@ from config import Config
 load_dotenv()
 
 app = Flask(__name__)
+@app.template_filter('datetimeformat')
+def datetimeformat(value):
+    """Convert YYYY-MM-DD to DD-MM-YYYY"""
+    if not value:
+        return ""
+    try:
+        date_obj = datetime.strptime(value, "%Y-%m-%d")
+        return date_obj.strftime("%d-%m-%Y")
+    except ValueError:
+        return value
 app.config.from_object(Config)
 
 # In-memory cache for invoice data (in production, use Redis or database)

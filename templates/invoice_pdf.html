@@ -176,7 +176,7 @@
     <table class="meta-table">
       <tr>
         <td><b>Invoice No:</b> {{ invoice.invoice_number }}</td>
-        <td><b>Invoice Date:</b> {{ invoice.invoice_date }}</td>
+        <td><b>Invoice Date:</b> {{ invoice.invoice_date | datetimeformat }}</td>
         <td><b>Vehicle No:</b> {{ invoice.vehicle_no }}</td>
         <td><b>G.R. / R.R. No:</b> {{ invoice.gr_rr_no }}</td>
       </tr>
@@ -187,7 +187,7 @@
       </tr>
       <tr>
         <td><b>GSTIN:</b> {{ invoice.billed_to.gstin }}</td>
-        <td><b>Date of Supply:</b> {{ invoice.date_of_supply }}</td>
+        <td><b>Date of Supply:</b> {{ invoice.date_of_supply | datetimeformat }}</td>
         <td colspan="2"><b>Place of Supply:</b> {{ invoice.billed_to.place_of_supply }}</td>
       </tr>
     </table>
