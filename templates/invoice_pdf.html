@@ -172,7 +172,7 @@
       </div>
     </div>
 
-    <!-- ===== INVOICE DETAILS ===== -->
+        <!-- ===== INVOICE DETAILS ===== -->
     <table class="meta-table">
       <tr>
         <td><b>Invoice No:</b> {{ invoice.invoice_number }}</td>
@@ -181,16 +181,17 @@
         <td><b>G.R. / R.R. No:</b> {{ invoice.gr_rr_no }}</td>
       </tr>
       <tr>
-        <td><b>Date of Supply:</b> {{ invoice.date_of_supply }}</td>
-        <td><b>Place of Supply:</b> {{ invoice.billed_to.place_of_supply }}</td>
+        <td colspan="2"><b>Name:</b> {{ invoice.billed_to.name }}</td>
         <td><b>State:</b> {{ invoice.billed_to.state }}</td>
         <td><b>State Code:</b> {{ invoice.billed_to.state_code }}</td>
       </tr>
       <tr>
-        <td colspan="2"><b>Name:</b> {{ invoice.billed_to.name }}</td>
-        <td colspan="2"><b>GSTIN:</b> {{ invoice.billed_to.gstin }}</td>
+        <td><b>GSTIN:</b> {{ invoice.billed_to.gstin }}</td>
+        <td><b>Date of Supply:</b> {{ invoice.date_of_supply }}</td>
+        <td colspan="2"><b>Place of Supply:</b> {{ invoice.billed_to.place_of_supply }}</td>
       </tr>
     </table>
+
 
     <!-- ===== ITEMS TABLE ===== -->
     <div class="items-wrapper">
