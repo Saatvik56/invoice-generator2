@@ -1,13 +1,13 @@
-# Use Debian-based Python image (non-slim) to avoid missing packages
+# Use Debian-based Python image (includes required libs for Playwright)
 FROM python:3.10
 
-# Set working directory
+# Set working directory inside the container
 WORKDIR /app
 
-# Copy project files
+# Copy all project files into container
 COPY . .
 
-# Install system dependencies required for Chromium and fonts
+# Install system dependencies required for Playwright + Chromium + fonts
 RUN apt-get update && apt-get install -y \
     libnss3 \
     libxss1 \
@@ -23,10 +23,13 @@ RUN apt-get update && apt-get install -y \
     libxi6 \
     libxcursor1 \
     libgtk-3-0 \
+    # ✅ Font packages for bold/regular text
     fonts-liberation \
-    fonts-noto-color-emoji \
-    fonts-noto \
+    fonts-dejavu-core \
+    fonts-dejavu-extra \
     fonts-freefont-ttf \
+    fonts-noto \
+    fonts-noto-color-emoji \
     wget \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -34,11 +37,11 @@ RUN apt-get update && apt-get install -y \
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Playwright + Chromium
+# Install Playwright + Chromium browser
 RUN pip install playwright && playwright install chromium
 
-# Expose Railway port
+# Expose port for Railway (it assigns a dynamic port)
 EXPOSE 8000
 
-# Start the app
+# Start the app using Gunicorn
 CMD ["gunicorn", "-b", "0.0.0.0:8000", "app:app"]
