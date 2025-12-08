@@ -217,6 +217,8 @@ def preview_invoice(invoice_no):
     
     # Render the invoice HTML
     invoice_html = render_template('invoice_pdf.html', invoice=invoice_data, logo_base64=logo_base64)
+
+    
     
     return render_template('preview.html', invoice=invoice_data, invoice_html=invoice_html)
 
@@ -237,10 +239,52 @@ def generate_pdf(invoice_no):
     
     invoice_data = invoice_cache[invoice_no]
     logo_base64 = encode_image_to_base64('static/logo.png')
-    
-    # Render invoice HTML
+
+    # Render base invoice HTML from template
     invoice_html = render_template('invoice_pdf.html', invoice=invoice_data, logo_base64=logo_base64)
-    
+
+    # ------------------------------
+    # INLINE ROBOTO FONTS AS BASE64
+    # ------------------------------
+    try:
+        fonts_dir = os.path.join(app.root_path, 'static', 'fonts')
+
+        def _b64(name):
+            with open(os.path.join(fonts_dir, name), "rb") as f:
+                return base64.b64encode(f.read()).decode("utf-8")
+
+        roboto_regular = _b64("Roboto-Regular.ttf")
+        roboto_bold = _b64("Roboto-Bold.ttf")
+
+        inline_fonts = f"""
+        <style>
+        @font-face {{
+          font-family: 'RobotoLocal';
+          src: url(data:font/ttf;base64,{roboto_regular}) format('truetype');
+          font-weight: 400;
+        }}
+        @font-face {{
+          font-family: 'RobotoLocal';
+          src: url(data:font/ttf;base64,{roboto_bold}) format('truetype');
+          font-weight: 700;
+        }}
+
+        h1, .invoice-title, .invoice-heading, .title {{
+          font-family: 'RobotoLocal' !important;
+          font-weight: 700 !important;
+        }}
+        </style>
+        """
+
+        # Prepend fonts before ANY HTML → guaranteed to load
+        invoice_html = inline_fonts + invoice_html
+
+    except Exception as e:
+        print("Font inline error:", e)
+
+    # ------------------------------
+    # PLAYWRIGHT PDF GENERATION
+    # ------------------------------
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(
@@ -248,26 +292,37 @@ def generate_pdf(invoice_no):
                 args=["--no-sandbox", "--disable-setuid-sandbox"]
             )
             page = browser.new_page()
-            page.set_content(invoice_html)
-            
+
+            # Load HTML into page
+            page.set_content(invoice_html, wait_until="load")
+
+            # Wait for fonts to be ready
+            page.evaluate("document.fonts.ready")
+
             # Generate PDF
             pdf_content = page.pdf(
-                format='A4',
+                format="A4",
                 print_background=True
             )
-            
+
             browser.close()
-        
-        # Create response
+
+        # Return PDF response
         response = make_response(pdf_content)
         response.headers['Content-Type'] = 'application/pdf'
-        response.headers['Content-Disposition'] = f'attachment; filename={invoice_no}_{invoice_data["invoice_date"]}.pdf'
-        
+        response.headers['Content-Disposition'] = (
+            f'attachment; filename={invoice_no}_{invoice_data["invoice_date"]}.pdf'
+        )
         return response
-        
+
     except Exception as e:
         flash(f'Error generating PDF: {str(e)}', 'error')
         return redirect(url_for('preview_invoice', invoice_no=invoice_no))
 
-if __name__ == '__main__':
-    app.run(debug=True)
+
+if __name__ == "__main__":
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    # bind to 0.0.0.0 so Docker/Render can reach the app; debug=True is kept for local dev
+    app.run(host="0.0.0.0", port=port, debug=True)
+

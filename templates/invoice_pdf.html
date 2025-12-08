@@ -3,17 +3,18 @@
 <head>
   <meta charset="utf-8">
   <title>Invoice {{ invoice.invoice_number }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
   <style>
     @page { size: A4 portrait; margin: 8mm; }
     html, body { width: 210mm; height: 297mm; }
-    body {
-      font-family: "Liberation Sans", Arial, sans-serif;
-      font-size: 10pt;
-      color: #000;
-      line-height: 1.2;
-      margin: 0;
-      padding: 0;
-    }
+body {
+  font-family: Arial, sans-serif;
+  font-size: 10pt;
+  color: #000;
+  line-height: 1.2;
+  margin: 0;
+  padding: 0;
+}
 
     .page {
       border: 1px solid #000;
@@ -35,11 +36,13 @@
     .gst { font-size: 9pt; text-align: center; margin-top: 2px; }
 
     .brand h1 {
-      margin: 0;
+    margin: 0;
       font-size: 19pt;
-      font-weight: 900;
+      font-weight: 700 !important;   /* ✔ now matches the embedded bold font */
+      font-family: 'RobotoLocal', sans-serif !important;
       text-align: center;
     }
+
 
     .addr { font-size: 9.5pt; text-align: center; }
     .phone { font-size: 10pt; text-align: center; font-weight: 700; }
@@ -162,7 +165,14 @@
       </div>
 
       <div class="brand">
-        <h1>Vijay Enterprises</h1>
+        <h1 style="margin: 0;
+    padding-bottom: 5px; 
+    font-size: 23pt;       /* Increased size for impact */
+    font-weight: 900;      /* Keeps it bold */
+    text-transform: uppercase; /* Forces capital letters (Standard for company headings) */
+    letter-spacing: 1px;   /* Adds the 'logo' feel */ text-shadow: 0.5px 0 0 currentColor, -0.5px 0 0 currentColor;">
+          Vijay Enterprises
+        </h1>
         <div class="addr">19/4, S-W, Vimal Tower, Opp. HDFC Bank, Sanjay Place, Agra-282002</div>
         <div class="phone">Mob.: 9837216469 | Email: vij.ent@rediffmail.com</div>
       </div>
