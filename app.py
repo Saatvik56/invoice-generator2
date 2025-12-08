@@ -120,6 +120,9 @@ def calculate_invoice_totals(items, discount_amount):
         'final_total': final_total,
         'amount_in_words': number_to_words(final_total)
     }
+@app.route("/healthz")
+def healthz():
+    return "ok", 200
 
 @app.route('/')
 def index():
