@@ -190,21 +190,7 @@
         </div>
 
         <!-- Discount and Electronic Reference -->
-        <div class="form-section">
-            <h5><i class="fas fa-percentage me-2"></i>Additional Information</h5>
-            <div class="row">
-                <div class="col-md-6">
-                    <label for="discount_amount" class="form-label">Discount Amount</label>
-                    <input type="number" class="form-control" id="discount_amount" name="discount_amount" 
-                           value="{{ invoice.discount_amount if invoice }}" step="0.01" min="0">
-                </div>
-                <div class="col-md-6">
-                    <label for="electronic_ref_no" class="form-label">Electronic Reference No.</label>
-                    <input type="text" class="form-control" id="electronic_ref_no" name="electronic_ref_no" 
-                           value="{{ invoice.electronic_ref_no if invoice }}">
-                </div>
-            </div>
-        </div>
+        
 
         <!-- Submit Button -->
         <div class="text-center mt-4">
